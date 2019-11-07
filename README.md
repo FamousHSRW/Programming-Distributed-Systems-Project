@@ -1,4 +1,4 @@
-# Programming-Distributed-Systems-Project
+# Programming-Distributed-Systems-Project-1
 
 ## Steps to run the project
 1. Setup git on your on pc, the following link could be of help: [Setup Git](https://help.github.com/en/github/getting-started-with-github/set-up-git)
