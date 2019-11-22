@@ -5,6 +5,9 @@ import java.util.Scanner;
 public class User {
     private static String username;
     private  static String password;
+    private  static Scanner scanner = new Scanner(System.in);
+    private static UserInterface userInterface = new UserInterface();
+
     public static void login() {
         getUser();
     }
@@ -14,7 +17,6 @@ public class User {
     }
 
     public static void getUser(){
-
         Scanner scanner = new Scanner(System.in);
         while (true) {
             System.out.println("Enter your username: ");
@@ -37,6 +39,7 @@ public class User {
             }
         }
     }
+
 
     public static void printInvalidUsernameOrPassword(String argument) {
         System.out.println(argument + " must be at least 4 characters long");
