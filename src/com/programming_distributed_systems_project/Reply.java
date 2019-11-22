@@ -1,9 +1,17 @@
 package com.programming_distributed_systems_project;
 
-public class Reply {
-    private static String operation;
-    private static String response;
-    public Reply(String response, String operation) {
+import java.io.Serializable;
 
+public class Reply implements Serializable {
+    private static final long serialVersionUID = 1L;
+
+    private String operation;
+    private String response;
+    public Reply(String response) {
+        super();
+        this.response = response;
+    }
+    public String getResponse() {
+        return this.response;
     }
 }

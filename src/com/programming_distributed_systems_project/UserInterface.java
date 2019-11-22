@@ -26,6 +26,9 @@ public class UserInterface {
     }
 
     /**
+     * hip r&b pop
+     */
+    /**
      * This will print out different steps for a logged out user to follow
      * It will automatically load other classes and move users to new application flows
      */
@@ -41,13 +44,13 @@ public class UserInterface {
             } else {
                 try {
                     int command = new Integer(input);
-                    User user = new User();
+                    Client client = new Client();
                     switch (command) {
                         case 1:
-                            user.login();
+                            client.login();
                             break;
                         case 2:
-                            user.register();
+                            client.register();
                             break;
                         default:
                             printUnknownCommand();
