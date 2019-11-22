@@ -5,24 +5,42 @@ import java.util.Scanner;
 public class User {
     private static String username;
     private  static String password;
+    private  static Scanner scanner = new Scanner(System.in);
+    private static UserInterface userInterface = new UserInterface();
+
     public static void login() {
-        Scanner scanner = new Scanner(System.in);
-        while (true) {
-            System.out.println("Enter your username: ");
-            username = scanner.next();
-            if(isValidUserNameOrPassword(username)) {
-                System.out.println("Enter your password: ");
-                password = scanner.next();
-                if(isValidUserNameOrPassword(password)) {
-                    // server should do login
-                    break;
-                } else {
-                    printInvalidUsernameOrPassword("password");
+        getUserInput("username");
+        getUserInput("password");
+        // send login details to server
+    }
+
+    public static void joinTeam() {
+
+    }
+
+    public  static void chooseCharacter() {
+
+    }
+
+    public static void getUserInput(String argument) {
+        String input;
+        while(true) {
+            System.out.println("Enter your " + argument + ": ");
+            input = scanner.next();
+            if (userInterface.isQuit(input)) {
+                break;
+            } else if (isValidUserNameOrPassword(input)) {
+                switch (argument) {
+                    case "username":
+                        username = input;
+                        break;
+                    case "password":
+                        password = input;
+                        break;
                 }
             } else {
-                printInvalidUsernameOrPassword("username");
+                printInvalidUsernameOrPassword(argument);
             }
-
         }
     }
     public static void printInvalidUsernameOrPassword(String argument) {
