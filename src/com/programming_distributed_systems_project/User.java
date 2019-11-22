@@ -9,46 +9,42 @@ public class User {
     private static UserInterface userInterface = new UserInterface();
 
     public static void login() {
-        getUserInput("username");
-        getUserInput("password");
-        // send login details to server
+        getUser();
     }
 
-    public static void joinTeam() {
-
+    public static void register() {
+        getUser();
     }
 
-    public  static void chooseCharacter() {
-
-    }
-
-    public static void getUserInput(String argument) {
-        String input;
-        while(true) {
-            System.out.println("Enter your " + argument + ": ");
-            input = scanner.next();
-            if (userInterface.isQuit(input)) {
+    public static void getUser(){
+        Scanner scanner = new Scanner(System.in);
+        while (true) {
+            System.out.println("Enter your username: ");
+            username = scanner.next();
+            if (isValidUserNameOrPassword(username)) {
                 break;
-            } else if (isValidUserNameOrPassword(input)) {
-                switch (argument) {
-                    case "username":
-                        username = input;
-                        break;
-                    case "password":
-                        password = input;
-                        break;
-                }
             } else {
-                printInvalidUsernameOrPassword(argument);
+                printInvalidUsernameOrPassword("username");
+            }
+        }
+
+        while(true) {
+            System.out.println("Enter your password: ");
+            password = scanner.next();
+            if (isValidUserNameOrPassword(password)) {
+                // server should do login
+                break;
+            } else {
+                printInvalidUsernameOrPassword("password");
             }
         }
     }
+
+
     public static void printInvalidUsernameOrPassword(String argument) {
         System.out.println(argument + " must be at least 4 characters long");
     }
-    public static void register() {
-        System.out.println("Implementation of register coming soon!!");
-    }
+
     public static boolean isValidUserNameOrPassword(String argument) {
         if(argument.length() >= 4) {
             return true;
