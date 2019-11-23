@@ -17,7 +17,6 @@ public class ServerThreadPool {
             ServerSocketTask serverTask = new ServerSocketTask(connection);//Start a task Thread to handle client request
             thPoolServer.execute(serverTask);//Execute Thread
         }
-
     }
 
 }
