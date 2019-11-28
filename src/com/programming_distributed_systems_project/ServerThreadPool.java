@@ -5,6 +5,10 @@ import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+/**
+ * This class contains the pool of all threads present on the server at a particular time
+ * It starts each client on a new thread and executes its own task (see ServerSocketTask)
+ */
 public class ServerThreadPool {
 
     private static Socket connection; //Create Socket
@@ -18,5 +22,4 @@ public class ServerThreadPool {
             thPoolServer.execute(serverTask);//Execute Thread
         }
     }
-
 }

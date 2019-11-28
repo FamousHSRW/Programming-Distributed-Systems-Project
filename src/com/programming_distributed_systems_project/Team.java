@@ -1,19 +1,28 @@
 package com.programming_distributed_systems_project;
 
+import java.io.Serializable;
 import java.util.HashMap;
 
-public class Team {
+/**
+ * This class represents each team in teams stored on the server
+ * Basically tells java properties and methods availabe to a team
+ */
+public class Team implements Serializable {
+    private static final long serialVersionUID = 1L;
 
     private HashMap<Integer, Reader> readers = new HashMap<Integer, Reader>();
     private int maximumNumberOfReaders = 3;
     private String name;
+    private int id;
 
-    public Team(String teamName) {
+
+    public Team(int id, String teamName) {
+        this.id = id;
         name = teamName;
     }
 
     public static void main(String[] args) {
-        Team team1 = new Team("team1");
+        Team team1 = new Team(1, "team1");
         Reader tom = new Reader("tom");
         Reader mark = new Reader("mark");
         Reader james = new Reader("James");
@@ -54,5 +63,25 @@ public class Team {
      */
     public HashMap<Integer, Reader> getReaders() {
         return readers;
+    }
+
+    public boolean isFull() {
+        return readers.size() >= 3 ? true : false;
+    }
+
+    /**
+     * Returns team name
+     * @return name
+     */
+    public String getName() {
+        return this.name;
+    }
+
+    /**
+     * Returns team id
+     * @return id
+     */
+    public int getId() {
+        return this.id;
     }
 }
