@@ -57,7 +57,8 @@ public class UserInterface {
      * TODO: add show results implementation
      * Shows the user a list of results of all teams based on the previous gameplay
      */
-    public void showResults() {
+    public void showResults(Object data) {
+        System.out.println("The result of this game round is:");
 
     }
 
@@ -68,7 +69,15 @@ public class UserInterface {
      * @param data
      */
     public void chooseCharacterInterface(Object data) {
-        System.out.println("Choose a character from the list below");
+        System.out.println("Choose a character from the list below: ");
+        Script script = ((Team) data).getScript();
+        ArrayList<Character> characters = script.getCharacters();
+        for(int i = 0; i < characters.size(); i++) {
+            System.out.println(i + ". " + characters.get(i));
+        }
+        String selection = scanner.next();
+        //TODO: take user selection, check to make sure it's valid, then send to server
+        // TODO: See choose team implementation
     }
 
     /**
@@ -116,7 +125,7 @@ public class UserInterface {
      * @return true if the user entered q or false otherwise
      */
     public static boolean isQuit(String command) {
-        return "q".equals(command) ? true : false;
+        return "q".equals(command);
     }
 
     /**

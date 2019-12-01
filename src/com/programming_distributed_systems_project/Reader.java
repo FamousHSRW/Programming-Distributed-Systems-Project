@@ -10,14 +10,22 @@ public class Reader implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private int ranking;
+    private char character;
     public String name;
-
     public Reader (String name){
         this.name = name;
     }
 
     public int getRanking() {
         return ranking;
+    }
+
+    public void setCharacter(char character) {
+        this.character = character;
+    }
+
+    public char getCharacter() {
+        return character;
     }
 
     /**

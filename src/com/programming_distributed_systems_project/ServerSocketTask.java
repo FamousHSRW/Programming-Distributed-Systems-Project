@@ -5,14 +5,16 @@ import java.io.*;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * This class represents a single thread which will be given to each client connected to the server at a particular time
  * All request and replies made between the client and server are handled here on the server side
  */
 public class ServerSocketTask implements Runnable{
-    private static HashMap<Integer, User> users = new HashMap<>();
-    private static HashMap<Integer, Team> teams = new HashMap<>();
+    private static ConcurrentHashMap<Integer, User> users = new ConcurrentHashMap<>();
+    private static ConcurrentHashMap<Integer, Team> teams = new ConcurrentHashMap<>();
+    private static ConcurrentHashMap<Integer, Script> scripts = new ConcurrentHashMap<>();
     private Socket connection;  // Create Socket
     private ObjectInputStream clientRequest;
     private ObjectOutputStream serverReply;
@@ -55,7 +57,19 @@ public class ServerSocketTask implements Runnable{
     }
 
     /**
-     * TODO: add and handle the other cases (choose character, ...)
+     * Generates a random script for team
+     * @param teamId
+     */
+    private Team addTeamScript(int teamId) {
+        Team team = teams.get(teamId);
+        int teamRankingAverage = team.getTeamRankingAverage();
+        Script script = new Script(teamRankingAverage);
+        team.setScript(script);
+        return team;
+    }
+
+    /**
+     * TODO: add and handle the other cases e.g. show results
      * Handles all request made from client to server
      * @param request
      * @throws IOException
@@ -71,6 +85,9 @@ public class ServerSocketTask implements Runnable{
                 break;
             case "join team":
                 this.joinTeam(request);
+                break;
+            case "choose character":
+                this.chooseCharacter(request);
                 break;
         }
     }
@@ -152,6 +169,39 @@ public class ServerSocketTask implements Runnable{
     }
 
     /**
+     * Chooses a character for a user
+     * TODO: add choose character implementation
+     */
+    private void chooseCharacter(Request request) {
+
+    }
+
+    /**
+     * Assigns random characters to each user of a team if time finishes and user hasn't chosen a character yet
+     * @param team team to assign characters to
+     */
+    private void assignCharacters(Team team) {
+        HashMap<Integer, Reader> readers = team.getReaders();
+        Script script = team.getScript();
+        ArrayList<Character> characters = script.getCharacters();
+        ArrayList<Character> assignedCharacters = team.getAssignedCharacters();
+
+        for(int i = 0; i < characters.size(); i++) {
+            char character = characters.get(i);
+            if(!assignedCharacters.contains(character)) {
+                readers.forEach((k, v) -> {
+                    char userCharacter = v.getCharacter();
+                    if((int)userCharacter == 0) {
+                        v.setCharacter(character);
+                        team.setAssignedCharacters(character);
+                    }
+                });
+            }
+
+        }
+    }
+
+    /**
      * Adds a reader to a specific team
      * @param user
      * @param team
@@ -166,8 +216,6 @@ public class ServerSocketTask implements Runnable{
 
     /**
      * Adds a user to a team
-     * TODO: if a user joins a team i.e the team was not full, check if the team, after adding the user becomes full
-     * TODO: if the team is full after adding the user notify clients to begin selecting characters
      * @param request
      */
     private void joinTeam(Request request) throws IOException {
@@ -178,7 +226,12 @@ public class ServerSocketTask implements Runnable{
         Reader reader = new Reader(user.getUsername());
         if(!team.isFull()) {
             team.setReader(reader);
-            this.notifyClient("Successfully joined team", user, team, "choose character");
+            if(team.isFull()) {
+                team = this.addTeamScript(team.getId());
+                this.notifyClient("Successfully joined team", user, team, "choose character");
+            } else {
+                this.notifyClient("Successfully joined team", user, team, "wait");
+            }
         } else {
             ArrayList<Integer> availableTeams = getAvailableTeams();
             if(availableTeams.size() < 1) {
@@ -186,13 +239,15 @@ public class ServerSocketTask implements Runnable{
                 availableTeams.add(newTeam.getId());
                 this.addReaderToTeam(user, newTeam);
             }
-            this.notifyClient("Team"+ teamId + " unfortnately is full", user, availableTeams, "choose team");
+            this.notifyClient("Team"+ teamId + " unfortunately is full", user, availableTeams, "choose team");
         }
     }
 
     /**
      * Returns teams available for a user to join
-     * TODO: make sure the team is suitable for the user to join (take a look at description on slides)
+     * FIXME:
+     *      - make sure the team is suitable for the user to join (take a look at description on slides)
+     *      - current implementation only checks if team is full or not
      * @return
      */
     private ArrayList<Integer> getAvailableTeams() {
@@ -205,12 +260,6 @@ public class ServerSocketTask implements Runnable{
         return availableTeams;
     }
 
-    /**
-     * TODO: add implementation (see slides)
-     */
-    private void getCharacterScripts() {
-
-    }
 
     /**
      * Sends all replies from server to client

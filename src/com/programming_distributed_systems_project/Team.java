@@ -1,6 +1,7 @@
 package com.programming_distributed_systems_project;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 /**
@@ -9,8 +10,9 @@ import java.util.HashMap;
  */
 public class Team implements Serializable {
     private static final long serialVersionUID = 1L;
-
+    private Script script;
     private HashMap<Integer, Reader> readers = new HashMap<Integer, Reader>();
+    private ArrayList<Character> assignedCharacters;
     private int maximumNumberOfReaders = 3;
     private String name;
     private int id;
@@ -39,6 +41,22 @@ public class Team implements Serializable {
 
 
         System.out.println("Team 1 readers" + team1.getReaders());
+    }
+
+    /**
+     * Adds a character to the list of already chosen characters by readers in the team
+     * @param character
+     */
+    public void setAssignedCharacters(char character) {
+        this.assignedCharacters.add(character);
+    }
+
+    /**
+     * Returns all characters already assigned to readers in the team;
+     * @return assignedCharacters
+     */
+    public ArrayList<Character> getAssignedCharacters() {
+        return assignedCharacters;
     }
 
     /**
@@ -83,5 +101,34 @@ public class Team implements Serializable {
      */
     public int getId() {
         return this.id;
+    }
+
+    /**
+     * Sets a script for a team
+     * @param script
+     */
+    public void setScript(Script script) {
+        this.script = script;
+    }
+
+    /**
+     * Returns team script
+     * @return
+     */
+    public Script getScript() {
+        return script;
+    }
+
+    /**
+     * Returns average of team ranking
+     * @return
+     */
+    public int getTeamRankingAverage() {
+        int[] sum = {};
+        this.readers.forEach((k, v) -> {
+            sum[0] += v.getRanking();
+        });
+        int average = Math.round(sum[0] / readers.size());
+        return average;
     }
 }
