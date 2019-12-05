@@ -208,7 +208,8 @@ public class ServerSocketTask implements Runnable{
      * @return team which the user was added to
      */
     private static Team addReaderToTeam(User user, Team team) {
-        Reader reader = new Reader(user.getUsername());
+        HashMap<Integer, Reader> readers = team.getReaders();
+        Reader reader = new Reader(readers.size() + 1, user.getUserId());
         user.setHasTeam(true);
         team.setReader(reader);
         return team;
@@ -223,7 +224,8 @@ public class ServerSocketTask implements Runnable{
         int userId = request.getUserId();
         User user = users.get(userId);
         Team team = teams.get(teamId);
-        Reader reader = new Reader(user.getUsername());
+        HashMap<Integer, Reader> readers = team.getReaders();
+        Reader reader = new Reader(readers.size() + 1, user.getUserId());
         if(!team.isFull()) {
             team.setReader(reader);
             if(team.isFull()) {

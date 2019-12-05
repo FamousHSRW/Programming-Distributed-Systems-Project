@@ -11,10 +11,16 @@ public class Reader implements Serializable {
 
     private int ranking;
     private char character;
-    public String name;
-    public Reader (String name){
-        this.name = name;
+    private int userId;
+    private int readerId;
+    public Reader (int readerId, int userId) {
+        this.userId = userId;
+        this.readerId = readerId;
     }
+
+    public int getReaderId() { return readerId; }
+
+    public int getUserId() { return userId; }
 
     public int getRanking() {
         return ranking;
@@ -40,7 +46,7 @@ public class Reader implements Serializable {
 
     // TODO: Remove this test before submission
     public static void main(String[] args) {
-        Reader testReader = new Reader("Mark");
+        Reader testReader = new Reader(1, 1);
         System.out.println("Test for ranking class");
         System.out.println("Ranking at the start " + testReader.getRanking());
         testReader.setRanking();
@@ -49,6 +55,6 @@ public class Reader implements Serializable {
 
     // TODO: remove this test before submission
     public String toString() {
-        return "This reader's name is " + this.name;
+        return "This reader's name is " + this.userId;
     }
 }

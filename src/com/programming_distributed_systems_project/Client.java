@@ -67,6 +67,7 @@ public class Client {
 
     /**
      * Handle all replies sent from server to client
+     * TODO: handle all cases
      */
     public void handleReply() {
         try {

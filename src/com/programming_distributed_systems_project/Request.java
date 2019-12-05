@@ -11,6 +11,7 @@ public class Request implements Serializable {
     private String operation;
     private String username;
     private String password;
+    private String character;
     private int teamId;
     private int userId;
 
@@ -52,6 +53,17 @@ public class Request implements Serializable {
         this.teamId = teamId;
         this.operation = operation;
         this.userId = userId;
+    }
+
+    /**
+     * This request is only created when a user chooses a character
+     * Choose Character Request
+     * @param userId
+     * @param character
+     */
+    public Request(int userId, String character) {
+        this.userId = userId;
+        this.character = character;
     }
 
     public String getOperation() {

@@ -76,6 +76,16 @@ public class UserInterface {
             System.out.println(i + ". " + characters.get(i));
         }
         String selection = scanner.next();
+        try {
+            int command = new Integer(selection);
+            if(command > characters.size()) throw new NumberFormatException();
+            else {
+                Request request = new Request(user.getUserId() ,selection);
+                client.sendRequest(request);
+            }
+        } catch (NumberFormatException e) {
+            printUnknownCommand();
+        }
         //TODO: take user selection, check to make sure it's valid, then send to server
         // TODO: See choose team implementation
     }

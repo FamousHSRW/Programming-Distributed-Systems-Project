@@ -25,10 +25,10 @@ public class Team implements Serializable {
 
     public static void main(String[] args) {
         Team team1 = new Team(1, "team1");
-        Reader tom = new Reader("tom");
-        Reader mark = new Reader("mark");
-        Reader james = new Reader("James");
-        Reader niko = new Reader("niko");
+        Reader tom = new Reader(1, 1);
+        Reader mark = new Reader(2, 2);
+        Reader james = new Reader(3,3);
+        Reader niko = new Reader(4, 4);
         team1.setReader(james);
         team1.setReader(tom);
         team1.setReader(mark);
@@ -60,7 +60,6 @@ public class Team implements Serializable {
     }
 
     /**
-     *
      * @param reader
      * @return true if was able to add reader or false if not able to add reader
      */
@@ -73,6 +72,10 @@ public class Team implements Serializable {
             return false;
         }
 
+    }
+
+    public Reader getReader(int readerId) {
+        return readers.get(readerId);
     }
 
     /**
