@@ -185,11 +185,7 @@ public class ServerSocketTask implements Runnable{
             synchronized (team) {
                 System.out.println("running after 10seconds");
                 if(team.getAssignedCharacters().size() != 3) {
-                    try {
-                        assignCharacters(team);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+                    assignCharacters(team);
                 }
             }
         }, 10000);
@@ -234,7 +230,7 @@ public class ServerSocketTask implements Runnable{
      * Assigns random characters to each user of a team if time finishes and user hasn't chosen a character yet
      * @param team team to assign characters to
      */
-    private void assignCharacters(Team team) throws IOException {
+    private void assignCharacters(Team team) {
         HashMap<Integer, Reader> readers = team.getReaders();
         Script script = team.getScript();
         ArrayList<Character> characters = script.getCharacters();
@@ -249,7 +245,13 @@ public class ServerSocketTask implements Runnable{
                         if(!team.getAssignedCharacters().contains(character)) {
                             reader.setCharacter(character);
                             team.setAssignedCharacters(character);
-                            this.notifyClient(user.getUsername() + " chose " + reader.getCharacter() , user, null, "chosen character", connection);
+                            readers.forEach((k, v) -> {
+                                try {
+                                    this.notifyClient(user.getUsername() + " chose " + reader.getCharacter() , user, null, "chosen character", v.getConnection());
+                                } catch(IOException e) {
+                                    e.printStackTrace();
+                                }
+                            });
                             break;
                         }
                     }

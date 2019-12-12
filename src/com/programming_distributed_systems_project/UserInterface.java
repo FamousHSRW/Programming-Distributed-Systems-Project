@@ -1,11 +1,7 @@
 package com.programming_distributed_systems_project;
-import java.io.IOException;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Scanner;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 /**
  * This class handles all stuff which involves a user interface
@@ -15,9 +11,11 @@ public class UserInterface {
     private static Scanner scanner = new Scanner(System.in);
     private Client client;
     private User user = null;
+    private Socket connection;
 
-    public UserInterface(Client client) {
+    public UserInterface(Client client, Socket connection) {
         this.client = client;
+        this.connection = connection;
     }
 
     /**
@@ -25,9 +23,10 @@ public class UserInterface {
      * Because we need a user to access non static properties of this class
      * @param user
      */
-    public UserInterface(Client client, User user) {
+    public UserInterface(User user, Socket connection, Client client) {
         this.user = user;
         this.client = client;
+        this.connection = connection;
     }
 
 
@@ -36,7 +35,7 @@ public class UserInterface {
      * FIXME: might not work as expected (see slides)
      * @param data
      */
-    public void chooseTeamInterface(Object data) {
+    public void chooseTeamInterface(User user, Object data) {
         data = (ArrayList<Integer>) data;
         System.out.println("Choose a team from one of the teams below: ");
         for (int i = 1; i <= ((ArrayList) data).size(); i++) {
@@ -49,7 +48,10 @@ public class UserInterface {
                     throw new NumberFormatException();
                 } else {
                     Request request = new Request((int) ((ArrayList) data).get(teamSelection - 1), user.getUserId(), "join team");
-                    client.sendRequest(request);
+                    ClientOutputThread outputThread = new ClientOutputThread(connection, request);
+                    Thread thread = new Thread(outputThread);
+                    thread.start();
+                    break;
                 }
             } catch(NumberFormatException e) {
                 printUnknownCommand();
@@ -72,17 +74,14 @@ public class UserInterface {
      * Gets the character picked by the user and sends as a choose character request to the server
      * @param data
      */
-    public void chooseCharacterInterface(Object data){
+    public void chooseCharacterInterface(User user, Object data){
         System.out.println("Choose a character from the list below: ");
         Script script = ((Script) data);
         ArrayList<Character> characters = script.getCharacters();
         for(int i = 1; i <= characters.size(); i++) {
             System.out.println(i + ". " + characters.get(i - 1));
         }
-        ClientThread clientThread = new ClientThread(characters.size(), client, user, characters);
-        ExecutorService executorService = Executors.newSingleThreadExecutor();
-        executorService.submit(clientThread);
-        client.handleReply();
+//        ClientOutputThread clientOutputThread = new ClientOutputThread(connection, request);
         //TODO: take user selection, check to make sure it's valid, then send to server
         // TODO: See choose team implementation
     }
@@ -92,38 +91,34 @@ public class UserInterface {
      * This will print out different steps for a logged out user to follow
      * It will automatically load other classes and move users to new application flows
      */
-    public static void loggedOutInterface(Client client) {
-        while(true) {
-            printExitInfo();
-            System.out.println("What do you want to do? Enter number of command");
-            System.out.println("1. Login");
-            System.out.println("2. Register");
-            Scanner scanner = new Scanner(System.in);
-            String input = scanner.next();
-            if(isQuit(input)) {
-                printThanks();
-                break;
-            } else {
-                try {
-                    int command = new Integer(input);
-                    switch (command) {
-                        case 1:
-                            client.login();
-                            break;
-                        case 2:
-                            client.register();
-                            break;
-                        default:
-                            printUnknownCommand();
-                            break;
-                    }
-                } catch (NumberFormatException e) {
-                    printUnknownCommand();
-                    printExitInfo();
+    public void loggedOutInterface() {
+        printExitInfo();
+        System.out.println("What do you want to do? Enter number of command");
+        System.out.println("1. Login");
+        System.out.println("2. Register");
+        Scanner scanner = new Scanner(System.in);
+        String input = scanner.next();
+        if(isQuit(input)) {
+            printThanks();
+        } else {
+            try {
+                int command = new Integer(input);
+                switch (command) {
+                    case 1:
+                        client.login();
+                        break;
+                    case 2:
+                        client.register();
+                        break;
+                    default:
+                        printUnknownCommand();
+                        break;
                 }
+            } catch (NumberFormatException e) {
+                printUnknownCommand();
+                printExitInfo();
             }
         }
-
     }
 
     /**

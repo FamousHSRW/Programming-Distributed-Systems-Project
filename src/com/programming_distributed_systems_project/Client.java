@@ -6,29 +6,12 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Client {
-    private Socket connection;
     private  static Scanner scanner = new Scanner(System.in);
-    private  static ObjectOutputStream outputStream;
-    private static ObjectInputStream inputStream;
     private User user = null;
+    private Socket connection;
 
-    public Client() {
-        connect();
-    }
-
-    /**
-     * Connects the client to the server
-     */
-    private void connect() {
-        int port = 1234; // initialize port number
-        String ip = "localhost"; // localhost ip address = 127.0.0.1
-        try {
-            connection = new Socket(ip, port); //Create a Client Socket for "localhost" address and port
-            System.out.println("Connected to server");
-        } catch(IOException e) {
-            System.out.println("You have no connection to the server");
-            e.printStackTrace();
-        }
+    public Client(Socket connection) {
+        this.connection = connection;
     }
 
     /**
@@ -37,7 +20,9 @@ public class Client {
     public void login() {
         ArrayList<String> user = getLoginOrRegisterDetails();
         Request loginRequest = new Request(user.get(0),user.get(1), "login");
-        sendRequest(loginRequest);
+        ClientOutputThread clientOutputThread = new ClientOutputThread(connection, loginRequest);
+        Thread thread = new Thread(clientOutputThread);
+        thread.start();
     }
 
     /**
@@ -46,82 +31,16 @@ public class Client {
     public void register() {
         ArrayList<String> user = getLoginOrRegisterDetails();
         Request registerRequest = new Request(user.get(0),user.get(1), "register");
-        this.sendRequest(registerRequest);
-    }
-
-    /**
-     * Handle all request made by client to server
-     * @param request
-     */
-    public void sendRequest(Request request) {
-        try {
-            System.out.println(">>>>>>>>>>>>>>>>>>");
-            outputStream = new ObjectOutputStream(connection.getOutputStream());
-            outputStream.writeObject(request);
-            outputStream.flush();
-            handleReply();
-        } catch (IOException e) {
-            System.out.println("Couldn't connect to the server...");
-            e.printStackTrace();
-        }
-    }
-
-    /**
-     * Handle all replies sent from server to client
-     * TODO: handle all cases
-     */
-    public void handleReply() {
-        try {
-            inputStream = new ObjectInputStream(connection.getInputStream());
-            Reply reply = (Reply) inputStream.readObject(); //Read Server Reply
-            String nextOperation = reply.nextOperation();
-            Object replyData = reply.getReplyData();
-            System.out.println(reply.getResponse());
-            switch (nextOperation) {
-                case "choose team": {
-                    User user = reply.getUser();
-                    UserInterface userInterface = new UserInterface(this, user);
-                    userInterface.chooseTeamInterface(replyData);
-                    break;
-                }
-                case "wait": {
-                    System.out.println("Wait for the team to get full");
-                    this.handleReply();
-                    break;
-                }
-                case "retry": {
-                    UserInterface.loggedOutInterface(this);
-                    break;
-                }
-                case "login": {
-                    System.out.println("You are now successfully registered, login to activate your account");
-                    UserInterface.loggedOutInterface(this);
-                    break;
-                }
-                case "choose character": {
-                    User user = reply.getUser();
-                    UserInterface userInterface = new UserInterface(this, user);
-                    userInterface.chooseCharacterInterface(replyData);
-                    break;
-                }
-                case "chosen character": {
-                    Team team = (Team) reply.getReplyData();
-                    // TODO: what to do here probably ask the user if he or she wishes to see results
-//                    System.out.println(team.printCharacterSelection());
-                }
-            }
-        } catch(ClassNotFoundException | IOException e ) {
-            System.out.println("Couldn't connect to the server...");
-            e.printStackTrace();
-        }
-
+        ClientOutputThread clientOutputThread = new ClientOutputThread(connection, registerRequest);
+        Thread thread = new Thread(clientOutputThread);
+        thread.start();
     }
 
     /**
      * Get user details for login or register
      * @return ArrayList<String> of user details
      */
-    public static ArrayList<String> getLoginOrRegisterDetails(){
+    public static ArrayList<String> getLoginOrRegisterDetails() {
         String username;
         String password;
         ArrayList<String> user = new ArrayList<>();
