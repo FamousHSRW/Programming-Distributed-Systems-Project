@@ -1,6 +1,7 @@
 package com.programming_distributed_systems_project;
 
 import java.io.Serializable;
+import java.net.Socket;
 
 /**
  * This class represents each reader in a team stored on the server
@@ -10,18 +11,20 @@ public class Reader implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private int ranking;
-    private char character;
+    private Character character;
     private int userId;
-    private int readerId;
-    public Reader (int readerId, int userId) {
-        this.userId = userId;
-        this.readerId = readerId;
-    }
+    private Socket connection;
+    private  String name;
 
-    public int getReaderId() { return readerId; }
+    public Reader (int userId, String name, Socket connection) {
+        this.userId = userId;
+        this.name = name;
+        this.connection = connection;
+    }
 
     public int getUserId() { return userId; }
 
+    public String getName()  {return name;}
     public int getRanking() {
         return ranking;
     }
@@ -30,10 +33,13 @@ public class Reader implements Serializable {
         this.character = character;
     }
 
-    public char getCharacter() {
+    public Character getCharacter() {
         return character;
     }
 
+    public Socket getConnection() {
+        return connection;
+    }
     /**
      * Gives the reader a random ranking between 1 - 5
      */
@@ -46,7 +52,7 @@ public class Reader implements Serializable {
 
     // TODO: Remove this test before submission
     public static void main(String[] args) {
-        Reader testReader = new Reader(1, 1);
+        Reader testReader = new Reader( 1, "famous", new Socket());
         System.out.println("Test for ranking class");
         System.out.println("Ranking at the start " + testReader.getRanking());
         testReader.setRanking();

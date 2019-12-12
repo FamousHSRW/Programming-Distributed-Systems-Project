@@ -11,7 +11,7 @@ public class Request implements Serializable {
     private String operation;
     private String username;
     private String password;
-    private String character;
+    private Character character;
     private int teamId;
     private int userId;
 
@@ -61,9 +61,10 @@ public class Request implements Serializable {
      * @param userId
      * @param character
      */
-    public Request(int userId, String character) {
+    public Request(int userId, Character character, String operation) {
         this.userId = userId;
         this.character = character;
+        this.operation = operation;
     }
 
     public String getOperation() {

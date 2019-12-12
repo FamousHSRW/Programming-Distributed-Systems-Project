@@ -2,6 +2,10 @@ package com.programming_distributed_systems_project;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 /**
  * This class handles all stuff which involves a user interface
@@ -68,24 +72,17 @@ public class UserInterface {
      * Gets the character picked by the user and sends as a choose character request to the server
      * @param data
      */
-    public void chooseCharacterInterface(Object data) {
+    public void chooseCharacterInterface(Object data){
         System.out.println("Choose a character from the list below: ");
-        Script script = ((Team) data).getScript();
+        Script script = ((Script) data);
         ArrayList<Character> characters = script.getCharacters();
-        for(int i = 0; i < characters.size(); i++) {
-            System.out.println(i + ". " + characters.get(i));
+        for(int i = 1; i <= characters.size(); i++) {
+            System.out.println(i + ". " + characters.get(i - 1));
         }
-        String selection = scanner.next();
-        try {
-            int command = new Integer(selection);
-            if(command > characters.size()) throw new NumberFormatException();
-            else {
-                Request request = new Request(user.getUserId() ,selection);
-                client.sendRequest(request);
-            }
-        } catch (NumberFormatException e) {
-            printUnknownCommand();
-        }
+        ClientThread clientThread = new ClientThread(characters.size(), client, user, characters);
+        ExecutorService executorService = Executors.newSingleThreadExecutor();
+        executorService.submit(clientThread);
+        client.handleReply();
         //TODO: take user selection, check to make sure it's valid, then send to server
         // TODO: See choose team implementation
     }
@@ -135,7 +132,7 @@ public class UserInterface {
      * @return true if the user entered q or false otherwise
      */
     public static boolean isQuit(String command) {
-        return "q".equals(command);
+        return "exit".equals(command);
     }
 
     /**
@@ -149,7 +146,7 @@ public class UserInterface {
      * Show an info message on what the user should do if he wants to quit the application
      */
     public static void printExitInfo() {
-        System.out.println("INFO: Enter `q` to quit");
+        System.out.println("INFO: Enter `exit` to quit");
     }
 
     /**
@@ -159,4 +156,7 @@ public class UserInterface {
         System.out.println("Thanks for playing...");
     }
 
+    public static String newLine() {
+        return System.getProperty("line.separator");//This will retrieve line separator dependent on OS.
+    }
 }

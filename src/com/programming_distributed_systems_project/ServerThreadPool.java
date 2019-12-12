@@ -13,7 +13,7 @@ public class ServerThreadPool {
 
     private static Socket connection; //Create Socket
     private static ServerSocket serverSocket; //Create a Server Socket
-    private static ExecutorService thPoolServer = Executors.newFixedThreadPool(1); //Create a pool of threads
+    private static ExecutorService thPoolServer = Executors.newFixedThreadPool(15); //Create a pool of threads
     public static void main(String[] args) throws IOException {
         serverSocket = new ServerSocket(1234); //Start a new server socket on port 1234
         while (true) {

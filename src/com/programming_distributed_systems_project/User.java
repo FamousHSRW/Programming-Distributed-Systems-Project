@@ -1,6 +1,7 @@
 package com.programming_distributed_systems_project;
 
 import java.io.Serializable;
+import java.net.Socket;
 
 /**
  * This class represents each user in users stored on the server
@@ -12,8 +13,7 @@ public class User implements Serializable {
     private String username;
     private String password;
     private int userId;
-    private boolean hasTeam;
-
+    private Integer teamId;
     public User (String username, String password, int userId) {
         this.username = username;
         this.password = password;
@@ -29,8 +29,12 @@ public class User implements Serializable {
     public String getUsername() {
         return username;
     }
-    public void setHasTeam(boolean hasTeam) {
-        this.hasTeam = hasTeam;
+    public void setTeamId(int teamId) {
+        this.teamId = teamId;
     }
-    public boolean getHasTeam() { return this.hasTeam; }
+    public Integer getTeamId() { return this.teamId; }
+
+    public static void main(String[] args) {
+        User user = new User("famous", "famous", 1);
+    }
 }

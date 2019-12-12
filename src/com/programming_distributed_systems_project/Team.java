@@ -1,6 +1,7 @@
 package com.programming_distributed_systems_project;
 
 import java.io.Serializable;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -12,7 +13,7 @@ public class Team implements Serializable {
     private static final long serialVersionUID = 1L;
     private Script script;
     private HashMap<Integer, Reader> readers = new HashMap<Integer, Reader>();
-    private ArrayList<Character> assignedCharacters;
+    private ArrayList<Character> assignedCharacters = new ArrayList<>();
     private int maximumNumberOfReaders = 3;
     private String name;
     private int id;
@@ -24,11 +25,12 @@ public class Team implements Serializable {
     }
 
     public static void main(String[] args) {
+        Socket socket = new Socket();
         Team team1 = new Team(1, "team1");
-        Reader tom = new Reader(1, 1);
-        Reader mark = new Reader(2, 2);
-        Reader james = new Reader(3,3);
-        Reader niko = new Reader(4, 4);
+        Reader tom = new Reader(1, "tom", socket);
+        Reader mark = new Reader(2, "mark", socket);
+        Reader james = new Reader(3, "james", socket);
+        Reader niko = new Reader(4, "niko", socket);
         team1.setReader(james);
         team1.setReader(tom);
         team1.setReader(mark);
@@ -66,7 +68,7 @@ public class Team implements Serializable {
     public boolean setReader(Reader reader) {
         int numberOfReaders  = readers.size();
         if(numberOfReaders < maximumNumberOfReaders) {
-            readers.put(numberOfReaders++, reader);
+            readers.put(numberOfReaders + 1, reader);
             return true;
         } else {
             return false;
@@ -74,8 +76,8 @@ public class Team implements Serializable {
 
     }
 
-    public Reader getReader(int readerId) {
-        return readers.get(readerId);
+    public Reader getReader(int userId) {
+        return readers.get(userId);
     }
 
     /**
@@ -87,7 +89,7 @@ public class Team implements Serializable {
     }
 
     public boolean isFull() {
-        return readers.size() >= 3 ? true : false;
+        return readers.size() >= 3;
     }
 
     /**
@@ -127,11 +129,27 @@ public class Team implements Serializable {
      * @return
      */
     public int getTeamRankingAverage() {
-        int[] sum = {};
+        int[] sum = {0};
         this.readers.forEach((k, v) -> {
             sum[0] += v.getRanking();
         });
         int average = Math.round(sum[0] / readers.size());
         return average;
+    }
+
+    public String printCharacterSelection() {
+        String[] string = {""};
+        readers.forEach((k, v) -> {
+            string[0] += v.getName() + " - " + v.getCharacter() + UserInterface.newLine();
+        });
+        return string[0];
+    }
+    public String printRankingResults() {
+        String[] string = {""};
+        readers.forEach((k, v) -> {
+            String readerName = v.getName();
+            string[0] += readerName + " - " + v.getRanking() + UserInterface.newLine();
+        });
+        return string[0];
     }
 }

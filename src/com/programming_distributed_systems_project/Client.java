@@ -13,6 +13,7 @@ public class Client {
     private User user = null;
 
     public Client() {
+        connect();
     }
 
     /**
@@ -23,6 +24,7 @@ public class Client {
         String ip = "localhost"; // localhost ip address = 127.0.0.1
         try {
             connection = new Socket(ip, port); //Create a Client Socket for "localhost" address and port
+            System.out.println("Connected to server");
         } catch(IOException e) {
             System.out.println("You have no connection to the server");
             e.printStackTrace();
@@ -52,7 +54,6 @@ public class Client {
      * @param request
      */
     public void sendRequest(Request request) {
-        connect();
         try {
             System.out.println(">>>>>>>>>>>>>>>>>>");
             outputStream = new ObjectOutputStream(connection.getOutputStream());
@@ -80,17 +81,11 @@ public class Client {
                 case "choose team": {
                     User user = reply.getUser();
                     UserInterface userInterface = new UserInterface(this, user);
-                    if(((ArrayList) replyData).size() == 1 && user.getHasTeam()) {
-                        System.out.println("You have been automatically added to team" + ((ArrayList) replyData).get(0));
-                        System.out.println("Wait a moment for your team to get complete");
-                        this.handleReply();
-                    } else {
-                        userInterface.chooseTeamInterface(replyData);
-                    }
+                    userInterface.chooseTeamInterface(replyData);
                     break;
                 }
                 case "wait": {
-                    System.out.println("Wait a moment for your team to get complete");
+                    System.out.println("Wait for the team to get full");
                     this.handleReply();
                     break;
                 }
@@ -108,6 +103,11 @@ public class Client {
                     UserInterface userInterface = new UserInterface(this, user);
                     userInterface.chooseCharacterInterface(replyData);
                     break;
+                }
+                case "chosen character": {
+                    Team team = (Team) reply.getReplyData();
+                    // TODO: what to do here probably ask the user if he or she wishes to see results
+//                    System.out.println(team.printCharacterSelection());
                 }
             }
         } catch(ClassNotFoundException | IOException e ) {

@@ -18,6 +18,7 @@ public class ServerSocketTask implements Runnable{
     private Socket connection;  // Create Socket
     private ObjectInputStream clientRequest;
     private ObjectOutputStream serverReply;
+    private User user;
 
     public ServerSocketTask(Socket s) {
         this.connection = s;
@@ -26,15 +27,15 @@ public class ServerSocketTask implements Runnable{
     @Override
     public void run() {
             try {
-                System.out.println("Socket task");
-                clientRequest = new ObjectInputStream(connection.getInputStream()); //Create a Request Buffer
-                Request request = (Request) clientRequest.readObject(); //Read Client request, Convert it to String
-                System.out.println("Client sent : " + request.toString()); //Print the client request
-                handleRequest(request);
-//            clientRequest.close(); //close Reply Buffer
+                while(true) {
+                    clientRequest = new ObjectInputStream(connection.getInputStream()); //Create a Request Buffer
+                    Request request = (Request) clientRequest.readObject(); //Read Client request, Convert it to String
+                    System.out.println("Client sent : " + request.toString()); //Print the client request
+                    handleRequest(request);
+                }
             } catch (IOException | ClassNotFoundException e) {
                 System.out.println("connection closed");
-                e.printStackTrace();
+//                e.printStackTrace();
                 this.killSocketTask();
             }
 
@@ -51,7 +52,7 @@ public class ServerSocketTask implements Runnable{
             if(connection != null) connection.close();
         } catch (IOException e) {
             System.out.println("Couldn't kill server task");
-            e.printStackTrace();
+//            e.printStackTrace();
         }
 
     }
@@ -61,11 +62,15 @@ public class ServerSocketTask implements Runnable{
      * @param teamId
      */
     private Team addTeamScript(int teamId) {
-        Team team = teams.get(teamId);
-        int teamRankingAverage = team.getTeamRankingAverage();
-        Script script = new Script(teamRankingAverage);
-        team.setScript(script);
-        return team;
+        synchronized (teams) {
+            Team team = teams.get(teamId);
+            int teamRankingAverage = team.getTeamRankingAverage();
+            Script script = new Script(teamRankingAverage);
+            if(team.getScript() == null) {
+                team.setScript(script);
+            }
+            return team;
+        }
     }
 
     /**
@@ -95,7 +100,7 @@ public class ServerSocketTask implements Runnable{
     /**
      * This function can be used to perform server side register user functionality
      */
-    private void register(Request request) throws IOException {
+    private synchronized void register(Request request) throws IOException {
         int userId = users.size() + 1;
         String reqUsername = request.getUsername();
         String reqPassword = request.getPassword();
@@ -114,17 +119,16 @@ public class ServerSocketTask implements Runnable{
         if (freeUserName) {
             User user = new User(reqUsername, reqPassword, userId);
             users.put(userId, user);
-            this.notifyClient("Successfully registered", null, null, "login");
+            this.notifyClient("Successfully registered", null, null, "login", connection);
         } else {
-            this.notifyClient("The username is taken", null, null, "retry");
+            this.notifyClient("The username is taken", null, null, "retry", connection);
         }
     }
 
     /**
      * This function can be used to perform server side login user functionality
      */
-    private void login(Request request) throws IOException {
-        User user = null;
+    private synchronized void login(Request request) throws IOException {
         String reqPassword = request.getPassword();
         String reqUsername = request.getUsername();
         for(int i =  1; i <= users.size(); i++) {
@@ -140,32 +144,82 @@ public class ServerSocketTask implements Runnable{
             }
         }
         if(user != null) {
-            if(!user.getHasTeam()) {
+            if(user.getTeamId() == null) {
                 ArrayList<Integer> availableTeams = getAvailableTeams();
                 if(availableTeams.size() < 1) {
                     Team newTeam = createTeam();
                     availableTeams.add(newTeam.getId());
-                    this.addReaderToTeam(user, newTeam);
+                    this.addReaderToTeam(newTeam);
+                    this.notifyClient("Successfully loggedIn" + UserInterface.newLine() + "You have been automatically added to team"+ newTeam.getId(), user, null, "wait", connection);
+                    this.waitForTeamCompletion(newTeam);
+                } else {
+                    this.notifyClient("Successfully loggedIn", user, availableTeams,  "choose team", connection);
                 }
-                this.notifyClient("Successfully loggedIn", user, availableTeams,  "choose team");
             } else {
-                this.notifyClient("Successfully loggedIn", user, null, "wait");
+                this.notifyClient("Successfully loggedIn", user, null, "wait", connection);
+                Team userTeam = teams.get(user.getTeamId());
+                this.waitForTeamCompletion(userTeam);
             }
         } else {
-            this.notifyClient("User details incorrect", null, null, "retry");
+            this.notifyClient("User details incorrect", null, null, "retry", connection);
         }
+    }
+
+    private void waitForTeamCompletion(Team team) throws IOException {
+        synchronized (team) {
+            try {
+                team.wait();
+                if(team.isFull()) {
+                    this.notifyClient("Time to choose a character",user, team.getScript(), "choose character",connection);
+                    setChooseCharacterTimeout(team);
+                }
+            } catch (InterruptedException e) {
+                System.out.println("team addition is interrupted is interrupted");
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void setChooseCharacterTimeout(Team team) {
+        setTimeout(() -> {
+            synchronized (team) {
+                System.out.println("running after 10seconds");
+                if(team.getAssignedCharacters().size() != 3) {
+                    try {
+                        assignCharacters(team);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }, 10000);
+
+    }
+
+    public static void setTimeout(Runnable runnable, int delay){
+        new Thread(() -> {
+            try {
+                Thread.sleep(delay);
+                runnable.run();
+            }
+            catch (Exception e){
+                System.err.println(e);
+            }
+        }).start();
     }
 
     /**
      * Creates a new team
      */
     private static Team createTeam() {
-        int numberOfTeams = teams.size();
-        int teamId = numberOfTeams + 1;
-        String newTeamName = "team" + String.valueOf(teamId);
-        Team newTeam = new Team(teamId, newTeamName);
-        teams.put(teamId, newTeam);
-        return newTeam;
+        synchronized (teams) {
+            int numberOfTeams = teams.size();
+            int teamId = numberOfTeams + 1;
+            String newTeamName = "team" + teamId;
+            Team newTeam = new Team(teamId, newTeamName);
+            teams.put(teamId, newTeam);
+            return newTeam;
+        }
     }
 
     /**
@@ -180,37 +234,38 @@ public class ServerSocketTask implements Runnable{
      * Assigns random characters to each user of a team if time finishes and user hasn't chosen a character yet
      * @param team team to assign characters to
      */
-    private void assignCharacters(Team team) {
+    private void assignCharacters(Team team) throws IOException {
         HashMap<Integer, Reader> readers = team.getReaders();
         Script script = team.getScript();
         ArrayList<Character> characters = script.getCharacters();
         ArrayList<Character> assignedCharacters = team.getAssignedCharacters();
 
-        for(int i = 0; i < characters.size(); i++) {
-            char character = characters.get(i);
-            if(!assignedCharacters.contains(character)) {
-                readers.forEach((k, v) -> {
-                    char userCharacter = v.getCharacter();
-                    if((int)userCharacter == 0) {
-                        v.setCharacter(character);
-                        team.setAssignedCharacters(character);
+        if(assignedCharacters.size() != 3) {
+            Reader reader = team.getReader(user.getUserId());
+            Character userCharacter = reader.getCharacter();
+            if (userCharacter == null) {
+                for(char character : characters) {
+                    synchronized (team) {
+                        if(!team.getAssignedCharacters().contains(character)) {
+                            reader.setCharacter(character);
+                            team.setAssignedCharacters(character);
+                            this.notifyClient(user.getUsername() + " chose " + reader.getCharacter() , user, null, "chosen character", connection);
+                            break;
+                        }
                     }
-                });
+                }
             }
-
         }
     }
 
     /**
      * Adds a reader to a specific team
-     * @param user
      * @param team
      * @return team which the user was added to
      */
-    private static Team addReaderToTeam(User user, Team team) {
-        HashMap<Integer, Reader> readers = team.getReaders();
-        Reader reader = new Reader(readers.size() + 1, user.getUserId());
-        user.setHasTeam(true);
+    private Team addReaderToTeam(Team team) {
+        Reader reader = new Reader(user.getUserId(), user.getUsername(), connection);
+        user.setTeamId(team.getId());
         team.setReader(reader);
         return team;
     }
@@ -218,30 +273,43 @@ public class ServerSocketTask implements Runnable{
     /**
      * Adds a user to a team
      * @param request
+     * teams: {
+     *     teamId: team,
+     *     teamId: team
+     * }
+     * teams: {
+     *     1: team1,
+     *     2: team2
+     * }
+     * teams.get(1) // team1
      */
     private void joinTeam(Request request) throws IOException {
         int teamId = request.getTeamId();
-        int userId = request.getUserId();
-        User user = users.get(userId);
         Team team = teams.get(teamId);
-        HashMap<Integer, Reader> readers = team.getReaders();
-        Reader reader = new Reader(readers.size() + 1, user.getUserId());
+        Reader reader = new Reader(user.getUserId(), user.getUsername(), connection);
         if(!team.isFull()) {
             team.setReader(reader);
             if(team.isFull()) {
-                team = this.addTeamScript(team.getId());
-                this.notifyClient("Successfully joined team", user, team, "choose character");
+                synchronized (team) {
+                    team = this.addTeamScript(team.getId());
+                    this.notifyClient("Successfully joined team" + UserInterface.newLine() + "Time to choose a character", user, team.getScript(), "choose character", connection);
+                    this.setChooseCharacterTimeout(team);
+                    team.notifyAll();
+                }
             } else {
-                this.notifyClient("Successfully joined team", user, team, "wait");
+                this.notifyClient("Successfully joined team", user, null, "wait", connection);
+                this.waitForTeamCompletion(team);
             }
         } else {
             ArrayList<Integer> availableTeams = getAvailableTeams();
             if(availableTeams.size() < 1) {
                 Team newTeam = createTeam();
                 availableTeams.add(newTeam.getId());
-                this.addReaderToTeam(user, newTeam);
+                this.addReaderToTeam(newTeam);
+                this.notifyClient("You have been  automatically added to team" + newTeam.getId(), user, null, "wait", connection);
+            } else {
+                this.notifyClient("Team"+ teamId + " unfortunately is full", user, availableTeams, "choose team", connection);
             }
-            this.notifyClient("Team"+ teamId + " unfortunately is full", user, availableTeams, "choose team");
         }
     }
 
@@ -267,7 +335,7 @@ public class ServerSocketTask implements Runnable{
      * Sends all replies from server to client
      * @param response
      */
-    private void notifyClient(String response, User user, Object responseData, String nextOperation) throws IOException {
+    private void notifyClient(String response, User user, Object responseData, String nextOperation, Socket connection) throws IOException {
         Reply reply = new Reply(response, user, responseData, nextOperation);
         serverReply = new ObjectOutputStream(connection.getOutputStream()); //Create a Reply Buffer
         serverReply.writeObject(reply); //write "Reply" in the outputStream

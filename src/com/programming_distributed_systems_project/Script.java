@@ -1,13 +1,15 @@
 package com.programming_distributed_systems_project;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Random;
 
 /**
  * This class describes how a theater script should look like
  */
-public class Script {
-    private ArrayList<Character> characters;
+public class Script implements Serializable {
+    private static final long serialVersionUID = 1L;
+    private ArrayList<Character> characters = new ArrayList<>();
     private int difficulty;
 
     public Script (int difficulty) {
@@ -27,11 +29,9 @@ public class Script {
      * Adds random characters to script
      */
     public void generateCharacters() {
-        ArrayList<Character> characters = new ArrayList<>();
         for(int i = 0; i < 3; i++) {
-            characters.add(getRandomCharacter());
+            this.characters.add(getRandomCharacter());
         }
-        this.characters = characters;
     }
 
     /**
@@ -40,7 +40,12 @@ public class Script {
      */
     private char getRandomCharacter() {
         Random r = new Random();
-        return (char)(r.nextInt(26) + 'a');
+        char c = (char)(r.nextInt(26) + 'A');
+        if(characters.contains(c)) {
+            return getRandomCharacter();
+        } else {
+            return c;
+        }
     }
 
     /**
