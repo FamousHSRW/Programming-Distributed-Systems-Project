@@ -3,11 +3,14 @@ package com.programming_distributed_systems_project;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.net.Socket;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class ClientInputThread implements Runnable {
     private Socket connection;
     private ObjectInputStream inputStream;
     private UserInterface userInterface;
+    private ExecutorService thPoolServer = Executors.newFixedThreadPool(5); //Create a pool of threads
 
     public ClientInputThread(Socket connection, UserInterface userInterface) {
         this.connection = connection;
@@ -29,7 +32,7 @@ public class ClientInputThread implements Runnable {
      * TODO: handle all cases
      */
     public void handleReply() {
-        while(true) {
+        endGame: while(!thPoolServer.isTerminated() && !thPoolServer.isShutdown()) {
             try {
                 inputStream = new ObjectInputStream(connection.getInputStream());
                 Reply reply = (Reply) inputStream.readObject(); //Read Server Reply
@@ -39,7 +42,7 @@ public class ClientInputThread implements Runnable {
                 switch (nextOperation) {
                     case "choose team": {
                         User user = reply.getUser();
-                        userInterface.chooseTeamInterface(user, replyData);
+                        thPoolServer.execute(() -> userInterface.chooseTeamInterface(user, replyData));
                         break;
                     }
                     case "wait": {
@@ -48,16 +51,16 @@ public class ClientInputThread implements Runnable {
                         break;
                     }
                     case "retry": {
-                        userInterface.loggedOutInterface();
+                        thPoolServer.execute(() -> userInterface.loggedOutInterface());
                         break;
                     }
                     case "login": {
                         System.out.println("You are now successfully registered, login to activate your account");
-                        userInterface.loggedOutInterface();
+                        thPoolServer.execute(() -> userInterface.loggedOutInterface());
                         break;
                     }
                     case "choose character": {
-                        userInterface.chooseCharacterInterface(replyData);
+                        thPoolServer.execute(() -> userInterface.chooseCharacterInterface(replyData));
                         break;
                     }
                     case "chosen character": {
@@ -66,14 +69,17 @@ public class ClientInputThread implements Runnable {
     //                    System.out.println(team.printCharacterSelection());
                         break;
                     }
+                    case "end game": {
+                        thPoolServer.shutdownNow();
+                        break endGame;
+                    }
                 }
             } catch(ClassNotFoundException | IOException e ) {
                 System.out.println("Lost connection to server, terminating...");
-//                e.printStackTrace();
+                e.printStackTrace();
                 break;
             }
         }
-
     }
 
 }

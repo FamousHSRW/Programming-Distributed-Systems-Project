@@ -1,4 +1,7 @@
 package com.programming_distributed_systems_project;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Scanner;
@@ -8,27 +11,14 @@ import java.util.Scanner;
  * This is used mainly as main menu and fallback in case the suddenly user leaves all application flow
  */
 public class UserInterface {
-    private static Scanner scanner = new Scanner(System.in);
+    private static BufferedReader scanner = new BufferedReader(new InputStreamReader(System.in));
     private Client client;
-    private User user = null;
     private Socket connection;
 
     public UserInterface(Client client, Socket connection) {
         this.client = client;
         this.connection = connection;
     }
-
-    /**
-     * This constructor is only called when the user is logged in
-     * Because we need a user to access non static properties of this class
-     * @param user
-     */
-    public UserInterface(User user, Socket connection, Client client) {
-        this.user = user;
-        this.client = client;
-        this.connection = connection;
-    }
-
 
     /**
      * Interface shown when the user is about to choose a team
@@ -41,21 +31,28 @@ public class UserInterface {
         for (int i = 1; i <= ((ArrayList) data).size(); i++) {
             System.out.println(i+". team"+ ((ArrayList) data).get(i - 1));
         }
-        while(true) {
-            try {
-                int teamSelection = new Integer(scanner.nextLine());
-                if(teamSelection > ((ArrayList) data).size()) {
-                    throw new NumberFormatException();
-                } else {
-                    Request request = new Request((int) ((ArrayList) data).get(teamSelection - 1), user.getUserId(), "join team");
-                    ClientOutputThread outputThread = new ClientOutputThread(connection, request);
-                    Thread thread = new Thread(outputThread);
-                    thread.start();
-                    break;
+        try {
+            endInput: while(!Thread.interrupted()) {
+                while(!scanner.ready()) {
+                    try {
+                        Thread.sleep(200);
+                    } catch (InterruptedException e) {
+                        break endInput;
+                    }
                 }
-            } catch(NumberFormatException e) {
-                printUnknownCommand();
+                    int teamSelection = new Integer(scanner.readLine());
+                    if(teamSelection > ((ArrayList) data).size()) {
+                        throw new NumberFormatException();
+                    } else {
+                        Request request = new Request((int) ((ArrayList) data).get(teamSelection - 1), user.getUserId(), "join team");
+                        ClientOutputThread outputThread = new ClientOutputThread(connection, request);
+                        Thread thread = new Thread(outputThread);
+                        thread.start();
+                        break;
+                    }
             }
+        } catch(NumberFormatException | IOException e) {
+            printUnknownCommand();
         }
     }
 
@@ -82,21 +79,28 @@ public class UserInterface {
         for(int i = 1; i <= characters.size(); i++) {
             System.out.println(i + ". " + characters.get(i - 1));
         }
-        while(true){
-            try{
-                int charSelection = new Integer(scanner.nextLine());
-                if(charSelection >(characters.size())){
-                    throw new NumberFormatException();
-                }else {
-                    Request request = new Request(characters.get(charSelection - 1), "choose character");
-                    ClientOutputThread outputThread = new ClientOutputThread(connection,request);
-                    Thread thread = new Thread(outputThread);
-                    thread.start();
-                    break;
+        try {
+            endInput: while(!Thread.interrupted()) {
+                while(!scanner.ready()) {
+                    try {
+                        Thread.sleep(200);
+                    } catch (InterruptedException e) {
+                        break endInput;
+                    }
                 }
-            }catch (NumberFormatException e){
-                printUnknownCommand();
+                    int charSelection = new Integer(scanner.readLine());
+                    if(charSelection >(characters.size())){
+                        throw new NumberFormatException();
+                    }else {
+                        Request request = new Request(characters.get(charSelection - 1), "choose character");
+                        ClientOutputThread outputThread = new ClientOutputThread(connection,request);
+                        Thread thread = new Thread(outputThread);
+                        thread.start();
+                        break;
+                    }
             }
+        } catch (NumberFormatException | IOException e){
+                printUnknownCommand();
         }
         // ClientOutputThread clientOutputThread = new ClientOutputThread(connection, request);
         // TODO: take user selection, check to make sure it's valid, then send to server
@@ -171,4 +175,5 @@ public class UserInterface {
     public static String newLine() {
         return System.getProperty("line.separator");//This will retrieve line separator dependent on OS.
     }
+
 }

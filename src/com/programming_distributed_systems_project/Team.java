@@ -67,6 +67,17 @@ public class Team implements Serializable {
      */
     public boolean setReader(Reader reader) {
         int numberOfReaders  = readers.size();
+        int min;
+        int max;
+        if (this.readers.size() < 1) {
+            min = 1;
+            max = 5;
+        } else {
+            int rank = this.readers.get(1).getRanking();
+            min = Math.min(Math.max(rank - 1 , 1), 5);
+            max = Math.min(Math.max(rank + 1, 1), 5);
+        }
+        reader.setRanking(max, min);
         if(numberOfReaders < maximumNumberOfReaders) {
             readers.put(numberOfReaders + 1, reader);
             return true;
@@ -148,7 +159,7 @@ public class Team implements Serializable {
         String[] string = {""};
         readers.forEach((k, v) -> {
             String readerName = v.getName();
-            string[0] += readerName + " - " + v.getRanking() + UserInterface.newLine();
+            string[0] += readerName + " chose " + v.getCharacter() + " and got the ranking " + v.getRanking() + UserInterface.newLine();
         });
         return string[0];
     }

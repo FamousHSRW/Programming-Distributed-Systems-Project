@@ -45,7 +45,7 @@ public class Client {
         String password;
         ArrayList<String> user = new ArrayList<>();
         Scanner scanner = new Scanner(System.in);
-        while (true) {
+        while (!Thread.interrupted()) {
             System.out.println("Enter your username: ");
             username = scanner.next();
             if (isValidUserNameOrPassword(username)) {
@@ -56,7 +56,7 @@ public class Client {
             }
         }
 
-        while(true) {
+        while(!Thread.interrupted()) {
             System.out.println("Enter your password: ");
             password = scanner.next();
             if (isValidUserNameOrPassword(password)) {

@@ -182,7 +182,6 @@ public class ServerSocketTask implements Runnable{
     private void setChooseCharacterTimeout(Team team) {
         setTimeout(() -> {
             synchronized (team) {
-                System.out.println("running after 10seconds");
                 if(team.getAssignedCharacters().size() != 3) {
                     assignCharacters(team);
                 }
@@ -224,6 +223,7 @@ public class ServerSocketTask implements Runnable{
     private synchronized void chooseCharacter(Request request) throws IOException {
         Character chosenCharacter = request.getCharacter();
         int userId = user.getUserId();
+        System.out.println(user.getTeamId());
         int teamId = user.getTeamId();
         Team team = teams.get(teamId);
         HashMap<Integer, Reader> readers = team.getReaders();
@@ -234,12 +234,7 @@ public class ServerSocketTask implements Runnable{
             if(!assignedCharacters.contains(chosenCharacter)){
                 reader.setCharacter(chosenCharacter);
                 team.setAssignedCharacters(chosenCharacter);
-                readers.forEach((k, v) -> {
-                    try {
-                        this.notifyClient(user.getUsername() + " chose " + chosenCharacter, user,null, "chosen character", v.getConnection());
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+                readers.forEach((k, v) -> { this.notifyClient(user.getUsername() + " chose " + chosenCharacter, user,null, "chosen character", v.getConnection());
 
                 });
             }
@@ -274,17 +269,18 @@ public class ServerSocketTask implements Runnable{
                             reader.setCharacter(character);
                             team.setAssignedCharacters(character);
                             readers.forEach((k, v) -> {
-                                try {
-                                    this.notifyClient(user.getUsername() + " chose " + reader.getCharacter() , user, null, "chosen character", v.getConnection());
-                                } catch(IOException e) {
-                                    e.printStackTrace();
-                                }
+                                this.notifyClient(user.getUsername() + " chose " + reader.getCharacter() , user, null, "chosen character", v.getConnection());
                             });
                             break;
                         }
                     }
                 }
-
+        }
+        // Print round results when the all users have characters
+        if(assignedCharacters.size() == 3) {
+            readers.forEach((k, v) -> {
+                this.notifyClient("******************************************" + UserInterface.newLine() + "Here are the results of the game" + UserInterface.newLine() + "************************************" + UserInterface.newLine() + team.printRankingResults() + "*******************************************", null, null, "end game", v.getConnection());
+            });
         }
     }
 
@@ -307,9 +303,8 @@ public class ServerSocketTask implements Runnable{
     private void joinTeam(Request request) throws IOException {
         int teamId = request.getTeamId();
         Team team = teams.get(teamId);
-        Reader reader = new Reader(user.getUserId(), user.getUsername(), connection);
         if(!team.isFull()) {
-            team.setReader(reader);
+            this.addReaderToTeam(team);
             if(team.isFull()) {
                 synchronized (team) {
                     team = this.addTeamScript(team.getId());
@@ -355,10 +350,14 @@ public class ServerSocketTask implements Runnable{
      * Sends all replies from server to client
      * @param response
      */
-    private void notifyClient(String response, User user, Object responseData, String nextOperation, Socket connection) throws IOException {
-        Reply reply = new Reply(response, user, responseData, nextOperation);
-        serverReply = new ObjectOutputStream(connection.getOutputStream()); //Create a Reply Buffer
-        serverReply.writeObject(reply); //write "Reply" in the outputStream
-        serverReply.flush(); //Send written content to client
+    private void notifyClient(String response, User user, Object responseData, String nextOperation, Socket connection) {
+        try {
+            Reply reply = new Reply(response, user, responseData, nextOperation);
+            serverReply = new ObjectOutputStream(connection.getOutputStream()); //Create a Reply Buffer
+            serverReply.writeObject(reply); //write "Reply" in the outputStream
+            serverReply.flush(); //Send written content to client
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

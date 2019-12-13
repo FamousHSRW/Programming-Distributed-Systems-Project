@@ -2,6 +2,7 @@ package com.programming_distributed_systems_project;
 
 import java.io.Serializable;
 import java.net.Socket;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * This class represents each reader in a team stored on the server
@@ -43,10 +44,8 @@ public class Reader implements Serializable {
     /**
      * Gives the reader a random ranking between 1 - 5
      */
-    public void setRanking() {
-        int max =5;
-        int min = 1;
-        int index = (int)(Math.random() * ((max - 1) + 1)) + min;
+    public void setRanking(int max, int min) {
+        int index = ThreadLocalRandom.current().nextInt(min, max + 1);
         ranking = index;
     }
 
@@ -55,7 +54,7 @@ public class Reader implements Serializable {
         Reader testReader = new Reader( 1, "famous", new Socket());
         System.out.println("Test for ranking class");
         System.out.println("Ranking at the start " + testReader.getRanking());
-        testReader.setRanking();
+        testReader.setRanking(5, 3);
         System.out.println("Ranking after one set ranking call " + testReader.getRanking());
     }
 
