@@ -2,65 +2,50 @@ package com.programming_distributed_systems_project;
 
 import java.io.*;
 import java.net.Socket;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Client {
-    private Socket connection;
     private  static Scanner scanner = new Scanner(System.in);
-    private static UserInterface userInterface = new UserInterface();
-    private static ObjectOutputStream outputStream; //Create a Request Buffer
+    private User user = null;
+    private Socket connection;
 
-    public Client() {
-        connect();
-    }
-    private void connect() {
-        int port = 1234; // initialize port number
-        String ip = "localhost"; // localhost ip address = 127.0.0.1
-        try {
-            this.connection = new Socket(ip, port); //Create a Client Socket for "localhost" address and port
-        } catch(IOException e) {
-            System.out.println("You have no connection to the server");
-            e.printStackTrace();
-        }
+    public Client(Socket connection) {
+        this.connection = connection;
     }
 
+    /**
+     * Logs in the client
+     */
     public void login() {
         ArrayList<String> user = getLoginOrRegisterDetails();
         Request loginRequest = new Request(user.get(0),user.get(1), "login");
-        this.sendRequest(loginRequest);
+        ClientOutputThread clientOutputThread = new ClientOutputThread(connection, loginRequest);
+        Thread thread = new Thread(clientOutputThread);
+        thread.start();
     }
 
+    /**
+     * Signs up the client
+     */
     public void register() {
         ArrayList<String> user = getLoginOrRegisterDetails();
         Request registerRequest = new Request(user.get(0),user.get(1), "register");
-        this.sendRequest(registerRequest);
+        ClientOutputThread clientOutputThread = new ClientOutputThread(connection, registerRequest);
+        Thread thread = new Thread(clientOutputThread);
+        thread.start();
     }
 
-    public void sendRequest(Request request) {
-        try {
-            System.out.println("Connected...");
-            outputStream = new ObjectOutputStream(this.connection.getOutputStream());
-            outputStream.writeObject(request);
-            outputStream.flush();
-
-            ObjectInputStream rd = new ObjectInputStream(connection.getInputStream()); //Create a Reply Object Buffer
-            Reply serverReply = (Reply) rd.readObject(); //Read Server Reply
-            System.out.println(serverReply.getResponse());
-
-            outputStream.close();
-        } catch(IOException | ClassNotFoundException e) {
-            System.out.println("Couldn't connect to the server...");
-        }
-    }
-
-    public ArrayList<String> getLoginOrRegisterDetails(){
+    /**
+     * Get user details for login or register
+     * @return ArrayList<String> of user details
+     */
+    public static ArrayList<String> getLoginOrRegisterDetails() {
         String username;
         String password;
         ArrayList<String> user = new ArrayList<>();
         Scanner scanner = new Scanner(System.in);
-        while (true) {
+        while (!Thread.interrupted()) {
             System.out.println("Enter your username: ");
             username = scanner.next();
             if (isValidUserNameOrPassword(username)) {
@@ -71,7 +56,7 @@ public class Client {
             }
         }
 
-        while(true) {
+        while(!Thread.interrupted()) {
             System.out.println("Enter your password: ");
             password = scanner.next();
             if (isValidUserNameOrPassword(password)) {
@@ -84,10 +69,19 @@ public class Client {
         return user;
     }
 
+    /**
+     * Informs the user of an invalid command entered
+     * @param argument command the user entered
+     */
     public static void printInvalidUsernameOrPassword(String argument) {
         System.out.println(argument + " must be at least 4 characters long");
     }
 
+    /**
+     * Checks if the user entered a good username or password
+     * @param argument the value the user entered
+     * @return boolean, true if valid and false is if invalid
+     */
     public static boolean isValidUserNameOrPassword(String argument) {
         if(argument.length() >= 4) {
             return true;
