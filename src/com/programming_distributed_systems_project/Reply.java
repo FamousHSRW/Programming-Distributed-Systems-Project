@@ -11,6 +11,7 @@ public class Reply implements Serializable {
     private Object replyData;
     private String reply;
     private User user = null;
+    private int teamId;
 
     /**
      * TODO: Overloading this constructor for different replies might be cool (see Request class for reference)
@@ -28,6 +29,14 @@ public class Reply implements Serializable {
         this.user = user;
     }
 
+    public Reply(String response, int teamId, Object replyData, String nextOperation) {
+        super();
+        this.reply = response;
+        this.replyData = replyData;
+        this.nextOperation = nextOperation;
+        this.teamId = teamId;
+    }
+
     public String getResponse() {
         return this.reply;
     }
@@ -38,6 +47,7 @@ public class Reply implements Serializable {
         return this.nextOperation;
     }
     public User getUser() { return this.user; };
+    public int getTeamId() { return teamId; }
 }
 /**
  * {

@@ -16,18 +16,6 @@ public class Request implements Serializable {
     private int userId;
 
     /**
-     * This request is general // FIXME: should probably be removed
-     * General Request
-     * @param request
-     * @param operation
-     */
-    public Request(String request, String operation) {
-        super();
-        this.request = request;
-        this.operation = operation;
-    }
-
-    /**
      * This request is only created when the user logs in or signs up
      * Login request constructor
      * @param username
@@ -58,15 +46,17 @@ public class Request implements Serializable {
     /**
      * This request is only created when a user chooses a character
      * Choose Character Request
-     * @param userId
      * @param character
+     * @param operation
      */
-    public Request(int userId, Character character, String operation) {
-        this.userId = userId;
+    public Request(Character character, String operation) {
         this.character = character;
         this.operation = operation;
     }
 
+    public Character getCharacter() {
+        return character;
+    }
     public String getOperation() {
         return operation;
     }

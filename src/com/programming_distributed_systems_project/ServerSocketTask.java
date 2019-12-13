@@ -38,7 +38,6 @@ public class ServerSocketTask implements Runnable{
 //                e.printStackTrace();
                 this.killSocketTask();
             }
-
     }
 
     /**
@@ -222,15 +221,45 @@ public class ServerSocketTask implements Runnable{
      * Chooses a character for a user
      * TODO: add choose character implementation
      */
-    private void chooseCharacter(Request request) {
+    private synchronized void chooseCharacter(Request request) throws IOException {
+        Character chosenCharacter = request.getCharacter();
+        int userId = user.getUserId();
+        int teamId = user.getTeamId();
+        Team team = teams.get(teamId);
+        HashMap<Integer, Reader> readers = team.getReaders();
+        Reader reader = team.getReader(userId);
+        Character userCharacter = reader.getCharacter();
+        if(userCharacter == null){
+            ArrayList<Character> assignedCharacters = team.getAssignedCharacters();
+            if(!assignedCharacters.contains(chosenCharacter)){
+                reader.setCharacter(chosenCharacter);
+                team.setAssignedCharacters(chosenCharacter);
+                readers.forEach((k, v) -> {
+                    try {
+                        this.notifyClient(user.getUsername() + " chose " + chosenCharacter, user,null, "chosen character", v.getConnection());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                });
+            }
+            else {
+                this.notifyClient(chosenCharacter + " has already been chosen", user, team.getScript(), "choose character", connection);
+            }
+        }
+        else{
+            this.notifyClient("You already have the character "+userCharacter,null,null,"chosen character", connection);
+        }
+
 
     }
+
 
     /**
      * Assigns random characters to each user of a team if time finishes and user hasn't chosen a character yet
      * @param team team to assign characters to
      */
-    private void assignCharacters(Team team) {
+    private synchronized void assignCharacters(Team team) {
         HashMap<Integer, Reader> readers = team.getReaders();
         Script script = team.getScript();
         ArrayList<Character> characters = script.getCharacters();
@@ -241,7 +270,6 @@ public class ServerSocketTask implements Runnable{
             Character userCharacter = reader.getCharacter();
             if (userCharacter == null) {
                 for(char character : characters) {
-                    synchronized (team) {
                         if(!team.getAssignedCharacters().contains(character)) {
                             reader.setCharacter(character);
                             team.setAssignedCharacters(character);
@@ -256,7 +284,7 @@ public class ServerSocketTask implements Runnable{
                         }
                     }
                 }
-            }
+
         }
     }
 
@@ -275,15 +303,6 @@ public class ServerSocketTask implements Runnable{
     /**
      * Adds a user to a team
      * @param request
-     * teams: {
-     *     teamId: team,
-     *     teamId: team
-     * }
-     * teams: {
-     *     1: team1,
-     *     2: team2
-     * }
-     * teams.get(1) // team1
      */
     private void joinTeam(Request request) throws IOException {
         int teamId = request.getTeamId();
@@ -332,7 +351,6 @@ public class ServerSocketTask implements Runnable{
         return availableTeams;
     }
 
-
     /**
      * Sends all replies from server to client
      * @param response
@@ -342,6 +360,5 @@ public class ServerSocketTask implements Runnable{
         serverReply = new ObjectOutputStream(connection.getOutputStream()); //Create a Reply Buffer
         serverReply.writeObject(reply); //write "Reply" in the outputStream
         serverReply.flush(); //Send written content to client
-//        serverReply.close(); //close Request Buffer
     }
 }

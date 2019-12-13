@@ -57,14 +57,14 @@ public class ClientInputThread implements Runnable {
                         break;
                     }
                     case "choose character": {
-                        User user = reply.getUser();
-                        userInterface.chooseCharacterInterface(user, replyData);
+                        userInterface.chooseCharacterInterface(replyData);
                         break;
                     }
                     case "chosen character": {
                         Team team = (Team) reply.getReplyData();
                         // TODO: what to do here probably ask the user if he or she wishes to see results
     //                    System.out.println(team.printCharacterSelection());
+                        break;
                     }
                 }
             } catch(ClassNotFoundException | IOException e ) {

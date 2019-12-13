@@ -74,15 +74,32 @@ public class UserInterface {
      * Gets the character picked by the user and sends as a choose character request to the server
      * @param data
      */
-    public void chooseCharacterInterface(User user, Object data){
+    public void chooseCharacterInterface(Object data){
         System.out.println("Choose a character from the list below: ");
         Script script = ((Script) data);
         ArrayList<Character> characters = script.getCharacters();
+
         for(int i = 1; i <= characters.size(); i++) {
             System.out.println(i + ". " + characters.get(i - 1));
         }
-//        ClientOutputThread clientOutputThread = new ClientOutputThread(connection, request);
-        //TODO: take user selection, check to make sure it's valid, then send to server
+        while(true){
+            try{
+                int charSelection = new Integer(scanner.nextLine());
+                if(charSelection >(characters.size())){
+                    throw new NumberFormatException();
+                }else {
+                    Request request = new Request(characters.get(charSelection - 1), "choose character");
+                    ClientOutputThread outputThread = new ClientOutputThread(connection,request);
+                    Thread thread = new Thread(outputThread);
+                    thread.start();
+                    break;
+                }
+            }catch (NumberFormatException e){
+                printUnknownCommand();
+            }
+        }
+        // ClientOutputThread clientOutputThread = new ClientOutputThread(connection, request);
+        // TODO: take user selection, check to make sure it's valid, then send to server
         // TODO: See choose team implementation
     }
 
