@@ -14,8 +14,6 @@ public class Reply implements Serializable {
     private int teamId;
 
     /**
-     * TODO: Overloading this constructor for different replies might be cool (see Request class for reference)
-     * FIXME: Not overloading currently makes this class unpredictable
      * @param response
      * @param user
      * @param replyData

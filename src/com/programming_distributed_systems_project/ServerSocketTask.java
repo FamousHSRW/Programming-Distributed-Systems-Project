@@ -42,7 +42,6 @@ public class ServerSocketTask implements Runnable{
 
     /**
      * Kill this socket task if the user disconnects
-     * FIXME: This functions needs an update to actually kill the socket task i.e. remove this class from memory when the user disconnects
      */
     private void killSocketTask() {
         try {
@@ -73,7 +72,6 @@ public class ServerSocketTask implements Runnable{
     }
 
     /**
-     * TODO: add and handle the other cases e.g. show results
      * Handles all request made from client to server
      * @param request
      * @throws IOException
@@ -169,7 +167,7 @@ public class ServerSocketTask implements Runnable{
             try {
                 team.wait();
                 if(team.isFull()) {
-                    this.notifyClient("Time to choose a character",user, team.getScript(), "choose character",connection);
+                    this.notifyClient("Time to choose a character, you have 10 seconds",user, team.getScript(), "choose character",connection);
                     setChooseCharacterTimeout(team);
                 }
             } catch (InterruptedException e) {
@@ -218,7 +216,6 @@ public class ServerSocketTask implements Runnable{
 
     /**
      * Chooses a character for a user
-     * TODO: add choose character implementation
      */
     private synchronized void chooseCharacter(Request request) throws IOException {
         Character chosenCharacter = request.getCharacter();
@@ -331,9 +328,6 @@ public class ServerSocketTask implements Runnable{
 
     /**
      * Returns teams available for a user to join
-     * FIXME:
-     *      - make sure the team is suitable for the user to join (take a look at description on slides)
-     *      - current implementation only checks if team is full or not
      * @return
      */
     private ArrayList<Integer> getAvailableTeams() {
