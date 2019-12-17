@@ -29,7 +29,6 @@ public class ClientInputThread implements Runnable {
 
     /**
      * Handle all replies sent from server to client
-     * TODO: handle all cases
      */
     public void handleReply() {
         endGame: while(!thPoolServer.isTerminated() && !thPoolServer.isShutdown()) {
@@ -65,7 +64,6 @@ public class ClientInputThread implements Runnable {
                     }
                     case "chosen character": {
                         Team team = (Team) reply.getReplyData();
-                        // TODO: what to do here probably ask the user if he or she wishes to see results
     //                    System.out.println(team.printCharacterSelection());
                         break;
                     }
@@ -76,7 +74,7 @@ public class ClientInputThread implements Runnable {
                 }
             } catch(ClassNotFoundException | IOException e ) {
                 System.out.println("Lost connection to server, terminating...");
-                e.printStackTrace();
+//                e.printStackTrace();
                 break;
             }
         }

@@ -22,7 +22,6 @@ public class UserInterface {
 
     /**
      * Interface shown when the user is about to choose a team
-     * FIXME: might not work as expected (see slides)
      * @param data
      */
     public void chooseTeamInterface(User user, Object data) {
@@ -57,7 +56,6 @@ public class UserInterface {
     }
 
     /**
-     * TODO: add show results implementation
      * Shows the user a list of results of all teams based on the previous gameplay
      */
     public void showResults(Object data) {
@@ -66,7 +64,6 @@ public class UserInterface {
     }
 
     /**
-     * TODO: add choose character implementation
      * Shows the user an interface to pick a character
      * Gets the character picked by the user and sends as a choose character request to the server
      * @param data
@@ -102,13 +99,9 @@ public class UserInterface {
         } catch (NumberFormatException | IOException e){
                 printUnknownCommand();
         }
-        // ClientOutputThread clientOutputThread = new ClientOutputThread(connection, request);
-        // TODO: take user selection, check to make sure it's valid, then send to server
-        // TODO: See choose team implementation
     }
 
     /**
-     * TODO: application doesn't quit sometimes when user enters q
      * This will print out different steps for a logged out user to follow
      * It will automatically load other classes and move users to new application flows
      */
@@ -121,6 +114,11 @@ public class UserInterface {
         String input = scanner.next();
         if(isQuit(input)) {
             printThanks();
+            try {
+                connection.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         } else {
             try {
                 int command = new Integer(input);

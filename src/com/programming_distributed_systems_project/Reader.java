@@ -48,18 +48,4 @@ public class Reader implements Serializable {
         int index = ThreadLocalRandom.current().nextInt(min, max + 1);
         ranking = index;
     }
-
-    // TODO: Remove this test before submission
-    public static void main(String[] args) {
-        Reader testReader = new Reader( 1, "famous", new Socket());
-        System.out.println("Test for ranking class");
-        System.out.println("Ranking at the start " + testReader.getRanking());
-        testReader.setRanking(5, 3);
-        System.out.println("Ranking after one set ranking call " + testReader.getRanking());
-    }
-
-    // TODO: remove this test before submission
-    public String toString() {
-        return "This reader's name is " + this.userId;
-    }
 }

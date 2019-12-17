@@ -47,13 +47,4 @@ public class Script implements Serializable {
             return c;
         }
     }
-
-    /**
-     * TODO: remove test before submission
-     */
-    public static void main(String[] args) {
-        Script script = new Script(2);
-        System.out.println(script.getRandomCharacter());
-        System.out.println(script.getCharacters().toString());
-    }
 }
