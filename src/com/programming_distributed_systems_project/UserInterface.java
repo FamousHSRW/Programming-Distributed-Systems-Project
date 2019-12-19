@@ -111,31 +111,32 @@ public class UserInterface {
         System.out.println("1. Login");
         System.out.println("2. Register");
         Scanner scanner = new Scanner(System.in);
-        String input = scanner.next();
-        if(isQuit(input)) {
-            printThanks();
-            try {
-                connection.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        } else {
-            try {
-                int command = new Integer(input);
-                switch (command) {
-                    case 1:
-                        client.login();
-                        break;
-                    case 2:
-                        client.register();
-                        break;
-                    default:
-                        printUnknownCommand();
-                        break;
+
+        outside: while(!Thread.interrupted()) {
+            String input = scanner.next();
+            if(isQuit(input)) {
+                printThanks();
+                try {
+                    connection.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
-            } catch (NumberFormatException e) {
-                printUnknownCommand();
-                printExitInfo();
+            } else {
+                try {
+                    int command = new Integer(input);
+                    switch (command) {
+                        case 1:
+                            client.login();
+                            break outside;
+                        case 2:
+                            client.register();
+                            break outside;
+                        default:
+                            throw new NumberFormatException();
+                    }
+                } catch (NumberFormatException e) {
+                    printUnknownCommand();
+                }
             }
         }
     }
